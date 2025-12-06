@@ -1,55 +1,49 @@
-import { Link } from "react-router-dom";
-import { BoltIcon, LockClosedIcon, DocumentDuplicateIcon } from "@heroicons/react/24/outline";
-
 export default function Home() {
-  const features = [
-    {
-      title: "Fast & Simple",
-      desc: "Upload files and get a code in seconds",
-      icon: <BoltIcon className="w-6 h-6 text-cyan-400" />,
-    },
-    {
-      title: "Secure",
-      desc: "Your files are encrypted and safe",
-      icon: <LockClosedIcon className="w-6 h-6 text-cyan-400" />,
-    },
-    {
-      title: "Multi-File",
-      desc: "Upload and download multiple files at once",
-      icon: <DocumentDuplicateIcon className="w-6 h-6 text-cyan-400" />,
-    },
-  ];
-
   return (
-    <div className="flex flex-col items-center justify-center gap-8 py-16">
+    <div className="flex flex-col items-center justify-center text-center h-[calc(100vh-80px)] px-6 overflow-hidden" style={{ fontFamily: "'Inter', 'Segoe UI', system-ui, sans-serif" }}>
+      {/* Content */}
+      <div className="relative z-10">
+        {/* Title with staggered fade-in */}
+        <h1 className="text-6xl font-extrabold mb-6 animate-[fadeInUp_0.8s_ease-out] tracking-tight" style={{ fontFamily: "'Space Grotesk', 'Inter', sans-serif" }}>
+          Welcome to GetIt
+        </h1>
+        
+        {/* Subtitle with delayed fade-in */}
+        <p className="max-w-xl text-lg text-gray-200 mb-10 animate-[fadeInUp_0.8s_ease-out_0.2s_both] leading-relaxed font-light">
+          Upload files or text securely and retrieve them later using a unique access code.
+        </p>
 
-      {/* TITLE AND SUBTITLE */}
-      <h1 className="text-4xl font-bold">Get-It</h1>
-      <p className="opacity-70 text-center">Save and retrieve code effortlessly.</p>
-
-      {/* BUTTONS */}
-      <div className="flex gap-6">
-        <Link to="/upload" className="px-6 py-3 bg-cyan-600 hover:bg-cyan-500 rounded-xl transition">
-          Upload Files
-        </Link>
-        <Link to="/retrieve" className="px-6 py-3 bg-gray-700 hover:bg-gray-600 rounded-xl transition">
-          Retrieve Files
-        </Link>
-      </div>
-
-      {/* FEATURE CARDS */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-16 max-w-4xl px-4 w-full">
-        {features.map((item, index) => (
-          <div
-            key={index}
-            className="bg-gray-800/60 border border-gray-700 rounded-xl p-6 shadow-md hover:shadow-lg hover:border-cyan-500/40 transition-all backdrop-blur-lg"
+        {/* Buttons with staggered entrance */}
+        <div className="flex gap-6 justify-center">
+          <a
+            href="/upload"
+            className="px-8 py-3 rounded-xl font-semibold text-black bg-[#D6B9FC] hover:bg-[#bda1f5] transition-all duration-300 hover:scale-105 animate-[fadeInUp_0.8s_ease-out_0.4s_both] tracking-wide"
           >
-            <div className="mb-4">{item.icon}</div>
-            <h3 className="text-lg font-semibold mb-1">{item.title}</h3>
-            <p className="text-gray-400 text-sm">{item.desc}</p>
-          </div>
-        ))}
+            Upload
+          </a>
+          <a
+            href="/retrieve"
+            className="px-8 py-3 rounded-xl font-semibold text-black bg-[#838CE5] hover:bg-[#6e76dc] transition-all duration-300 hover:scale-105 animate-[fadeInUp_0.8s_ease-out_0.4s_both] tracking-wide"
+          >
+            Retrieve
+          </a>
+        </div>
       </div>
+
+      <style jsx>{`
+        @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@700&family=Inter:wght@300;400;600&display=swap');
+        
+        @keyframes fadeInUp {
+          from {
+            opacity: 0;
+            transform: translateY(30px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+      `}</style>
     </div>
   );
 }

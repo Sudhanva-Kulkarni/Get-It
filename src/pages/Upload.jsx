@@ -11,12 +11,19 @@ export default function Upload() {
   const [textName, setTextName] = useState(""); 
   const [customNames, setCustomNames] = useState([]);
 
+  const baseUrl = import.meta.env.VITE_BASEURL;
 
-  const baseUrl=import.meta.env.VITE_BASEURL;
   const resetUpload = () => {
     setUploaded(false);
     setFiles([]);         
     setCustomNames([]);
+  };
+
+  const handleNewTextUpload = () => {
+    setCode("");
+    setUploaded(false);
+    setText("");
+    setTextName("");
   };
   
   const selectFiles = (e) => {
@@ -38,7 +45,9 @@ export default function Upload() {
 
   const removeFile = (index) => {
     const updated = files.filter((_, i) => i !== index);
+    const updatedNames = customNames.filter((_, i) => i !== index);
     setFiles(updated);
+    setCustomNames(updatedNames);
     toast.success("File removed");
   };
 
@@ -61,29 +70,25 @@ export default function Upload() {
 
     formData.append("names", JSON.stringify(customNames));
 
-    for (let pair of formData.entries()) {
-      console.log(pair[0], pair[1]);
-    }
-
-    toast.promise(
-      axios.post(`${baseUrl}/files`, formData, {
+    try {
+      const response = await axios.post(`${baseUrl}/files`, formData, {
         headers: { "Content-Type": "multipart/form-data" },
-      }),
-      {
-        loading: "Uploading...",
-        success: (res) => {
-          console.log("Response from backend:", res.data); 
-          if (res.data.key) setCode(res.data.key);
+      });
 
-          setUploaded(true);
-          setFiles([]);          
-          setCustomNames([]);
-
-          return "Upload successful!";
-        },
-        error: "Upload failed. Try again.",
+      if (response.data.success) {
+        if (response.data.key) setCode(response.data.key);
+        setUploaded(true);
+        setFiles([]);          
+        setCustomNames([]);
+        toast.success("Upload successful!");
       }
-    );
+    } catch (error) {
+      if (error.response?.status === 404) {
+        toast.error("Invalid code. Please check your code or create a new upload.");
+      } else {
+        toast.error("Upload failed. Try again.");
+      }
+    }
   };
 
   const handleTextUpload = async () => {
@@ -93,24 +98,26 @@ export default function Upload() {
     const payload = {
       contentname: textName, 
       description: "",
-      content: text,
-      code: code || undefined
+      content: text
     };
 
-    toast.promise(
-      axios.post(`${baseUrl}/text-content`, payload),
-      {
-        loading: "Saving text...",
-        success: (res) => {
-          if (res.data.ui) setCode(res.data.ui);
-          setText("");
-          setTextName(""); 
-          setUploaded(true);
-          return "Text uploaded successfully!";
-        },
-        error: "Upload failed."
+    try {
+      toast.loading("Saving text...");
+      const response = await axios.post(`${baseUrl}/text-content`, payload);
+      
+      if (response.data.ui) {
+        setCode(response.data.ui);
+        setText("");
+        setTextName(""); 
+        setUploaded(true);
+        toast.dismiss();
+        toast.success("Text uploaded successfully!");
       }
-    );
+    } catch (error) {
+      toast.dismiss();
+      console.error("Upload error:", error.response?.data);
+      toast.error("Upload failed. Try again.");
+    }
   };
 
   return (
@@ -145,22 +152,29 @@ export default function Upload() {
         ))}
       </div>
 
-      {/* CODE INPUT */}
-      <div className="mb-8 animate-[slideDown_0.6s_ease-out_0.3s_both]">
-        <label className="block text-sm font-medium text-gray-400 mb-2">
-          Access Code (Optional)
-        </label>
-        <input
-          type="text"
-          placeholder="Enter existing code to add to folder"
-          value={code}
-          onChange={(e) => setCode(e.target.value)}
-          className="w-full p-4 rounded-xl bg-[#38175A] text-white outline-none border-2 border-transparent focus:border-[#838CE5] transition-all duration-300"
-        />
-      </div>
-      <div className="block text-sm font-medium text-gray-400 mb-2">
-        Only 10 files each of maximum 10MB can be chosen at a time.
-      </div>
+      {/* CODE INPUT - Only show for file tab */}
+      {tab === "file" && (
+        <div className="mb-8 animate-[slideDown_0.6s_ease-out_0.3s_both]">
+          <label className="block text-sm font-medium text-gray-400 mb-2">
+            Access Code (Optional)
+          </label>
+          <input
+            type="text"
+            placeholder="Enter existing code to add more files"
+            value={code}
+            onChange={(e) => setCode(e.target.value)}
+            className="w-full p-4 rounded-xl bg-[#38175A] text-white outline-none border-2 border-transparent focus:border-[#838CE5] transition-all duration-300"
+          />
+        </div>
+      )}
+
+      {/* FILE SIZE INFO - Only show for file tab */}
+      {tab === "file" && (
+        <div className="block text-sm font-medium text-gray-400 mb-2">
+          Only 10 files each of maximum 10MB can be chosen at a time.
+        </div>
+      )}
+
       {/* FILE UPLOAD */}
       {tab === "file" && (
         <div className="border-2 border-gray-700 rounded-2xl p-8 flex flex-col gap-6 animate-[fadeIn_0.4s_ease-out] hover:border-gray-600 transition-colors duration-300">
@@ -192,11 +206,12 @@ export default function Upload() {
                     </button>
                   </div>
 
-                  {/* Custom Name Input (NEW FEATURE) */}
+                  {/* Custom Name Input */}
                   <div className="mt-1">
                     <input
                       type="text"
                       placeholder="Enter custom name"
+                      value={customNames[index] || ""}
                       className="w-full p-2 mt-1 rounded-md bg-[#50207A] text-white outline-none"
                       onChange={(e) => {
                         const updated = [...customNames];
@@ -254,7 +269,7 @@ export default function Upload() {
       {/* TEXT UPLOAD SECTION */}
       {tab === "text" && (
         <div className="flex flex-col gap-6 animate-[fadeIn_0.4s_ease-out]">
-          {/* TEXT NAME INPUT - NEW */}
+          {/* TEXT NAME INPUT */}
           <div>
             <label className="block text-sm font-medium text-gray-400 mb-2">
               Text Name
@@ -295,18 +310,27 @@ export default function Upload() {
           ) : (
             <>
               {/* SHOW CODE HERE */}
-              {uploaded && (
-                <div className="mt-4 text-lg text-gray-300">
+              <div className="mt-4 p-4 bg-[#2a1044] rounded-xl border border-[#D6B9FC]">
+                <p className="text-lg text-gray-300">
                   Your access code:
-                  <span className="font-mono text-[#D6B9FC] ml-2">{code}</span>
-                </div>
-              )}
-              <a 
-              href="/" 
-              className="bg-green-500 text-white px-8 py-4 rounded-xl font-bold text-center hover:bg-green-600 transition-all duration-300 hover:scale-105 animate-[fadeIn_0.4s_ease-out]"
-              >
-                ✓ Done — Return Home
-              </a>
+                  <span className="font-mono text-[#D6B9FC] ml-2 text-xl font-bold">{code}</span>
+                </p>
+              </div>
+
+              <div className="flex gap-4">
+                <button
+                  onClick={handleNewTextUpload}
+                  className="flex-1 bg-[#838CE5] text-black px-8 py-4 rounded-xl font-bold hover:bg-[#6e76dc] transition-all duration-300 hover:scale-105"
+                >
+                  Upload New Text
+                </button>
+                <a 
+                  href="/" 
+                  className="flex-1 bg-green-500 text-white px-8 py-4 rounded-xl font-bold text-center hover:bg-green-600 transition-all duration-300 hover:scale-105 animate-[fadeIn_0.4s_ease-out]"
+                >
+                  ✓ Done — Return Home
+                </a>
+              </div>
             </>
           )}
         </div>
@@ -314,6 +338,7 @@ export default function Upload() {
 
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@700&family=Inter:wght@300;400;600;700&display=swap');
+        @import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css');
         
         @keyframes fadeIn {
           from { opacity: 0; }

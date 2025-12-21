@@ -1,10 +1,58 @@
 @import "tailwindcss";
 body {
-    background-color: #111827;
-    color: #e5e7eb;
+  background: #0a0118;
+  color: #e5e7eb;
+  position: relative;
+  overflow-x: hidden;
+  min-height: 100vh;
 }
 
-/* ===== Black Slim Scrollbar ===== */
+body::before,
+body::after {
+  content: '';
+  position: fixed;
+  border-radius: 50%;
+  filter: blur(80px);
+  opacity: 0.5;
+  pointer-events: none;
+  z-index: 0;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+}
+
+body::before {
+  width: 600px;
+  height: 600px;
+  background: radial-gradient(circle, #D6B9FC, transparent 70%);
+  top: -200px;
+  right: -200px;
+  animation: float 15s alternate;
+}
+
+body::after {
+  width: 500px;
+  height: 500px;
+  background: radial-gradient(circle, #838CE5, transparent 70%);
+  bottom: -150px;
+  left: -150px;
+  animation: float 18s alternate-reverse;
+}
+
+@keyframes float {
+  0% { 
+    transform: translate(0, 0) scale(1); 
+  }
+  100% { 
+    transform: translate(100px, 80px) scale(1.1); 
+  }
+}
+
+/* Make sure content is above background */
+#root {
+  position: relative;
+  z-index: 1;
+}
+
 
 ::-webkit-scrollbar {
   width: 6px;

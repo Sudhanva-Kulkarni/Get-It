@@ -1,6 +1,6 @@
 export default function Home() {
   return (
-    <div className="flex flex-col items-center justify-center text-center min-h-[calc(100vh-95px)] px-6 overflow-hidden home-container" style={{ fontFamily: "'Inter', 'Segoe UI', system-ui, sans-serif" }}>
+    <div className="flex flex-col items-center justify-center text-center min-h-[calc(100vh-95px)] px-6 home-container" style={{ fontFamily: "'Inter', 'Segoe UI', system-ui, sans-serif" }}>
       <div className="relative z-10 flex flex-col items-center">
         <h1 className="home-title font-extrabold mb-6 animate-[fadeInUp_0.8s_ease-out] tracking-tight" style={{ fontFamily: "'Space Grotesk', 'Inter', sans-serif" }}>
           Welcome to GetIt

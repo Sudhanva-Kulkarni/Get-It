@@ -11,14 +11,14 @@ export default function Navbar() {
   return (
     <nav className="px-4 sm:px-6 md:px-8 py-4 sm:py-5 bg-linear-to-r from-[#38175A] to-[#2a1044] shadow-2xl border-b border-[#4a1f6e] name">
       <div className="max-w-7xl mx-auto flex items-center justify-between">
-        <div className="flex items-center gap-2 sm:gap-3">
+        <a href="/" className="flex items-center gap-2 sm:gap-3 cursor-pointer hover:opacity-90 transition-opacity duration-200">
           <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-white flex items-center justify-center shadow-lg p-1.5">
             <img src={logo} alt="GetIt Logo" className="w-full h-full object-contain" />
           </div>
           <h1 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-white tracking-tight" style={{ fontFamily: "'Montserrat', 'Space Grotesk', sans-serif" }}>
             GetIt
           </h1>
-        </div>
+        </a>
 
         <div className="hidden md:flex items-center gap-4 lg:gap-6">
           <a

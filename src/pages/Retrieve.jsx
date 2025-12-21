@@ -359,6 +359,46 @@ export default function Retrieve() {
         .custom-scrollbar::-webkit-scrollbar-thumb:hover {
           background: #6e76dc;
         }
+
+        /* Custom Checkbox Styling */
+        input[type="checkbox"] {
+          appearance: none;
+          -webkit-appearance: none;
+          width: 20px;
+          height: 20px;
+          border: 2px solid #838CE5;
+          border-radius: 6px;
+          background-color: transparent;
+          cursor: pointer;
+          position: relative;
+          transition: all 0.3s ease;
+        }
+
+        input[type="checkbox"]:hover {
+          border-color: #D6B9FC;
+          background-color: rgba(131, 140, 229, 0.1);
+        }
+
+        input[type="checkbox"]:checked {
+          background-color: #838CE5;
+          border-color: #838CE5;
+        }
+
+        input[type="checkbox"]:checked::after {
+          content: '✓';
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%);
+          color: #000;
+          font-size: 14px;
+          font-weight: bold;
+        }
+
+        input[type="checkbox"]:focus {
+          outline: none;
+          box-shadow: 0 0 0 3px rgba(131, 140, 229, 0.3);
+        }
       `}</style>
     </div>
   );

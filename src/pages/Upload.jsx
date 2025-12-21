@@ -1,4 +1,5 @@
 import { useState } from "react";
+import axios from "axios";
 import toast, { Toaster } from "react-hot-toast";
 
 export default function Upload() {
@@ -7,8 +8,17 @@ export default function Upload() {
   const [uploaded, setUploaded] = useState(false);
   const [files, setFiles] = useState([]);
   const [text, setText] = useState("");
+  const [textName, setTextName] = useState(""); 
+  const [customNames, setCustomNames] = useState([]);
 
-  // Select Files + Add description field
+
+  const baseUrl=import.meta.env.VITE_BASEURL;
+  const resetUpload = () => {
+    setUploaded(false);
+    setFiles([]);         
+    setCustomNames([]);
+  };
+  
   const selectFiles = (e) => {
     const chosenFiles = [...e.target.files];
 
@@ -26,42 +36,49 @@ export default function Upload() {
     toast.success("Files selected!");
   };
 
-  // Update individual file description
-  const updateDescription = (index, value) => {
-    const updated = [...files];
-    updated[index].description = value;
-    setFiles(updated);
-  };
-
-  // Remove file
   const removeFile = (index) => {
     const updated = files.filter((_, i) => i !== index);
     setFiles(updated);
     toast.success("File removed");
   };
 
-  // Upload Files API
   const handleFileUpload = async () => {
-    if (files.length === 0) return toast.error("Please select files first.");
+    if (files.length === 0)
+      return toast.error("Please select files first.");
+
+    if (customNames.length !== files.length)
+      return toast.error("Please enter a name for each file.");
 
     const formData = new FormData();
-    if (code) formData.append("code", code);
 
-    files.forEach(item => {
-      formData.append("files", item.file);
-      formData.append("descriptions", item.description);
+    if (code) {
+      formData.append("key", code);
+    }
+
+    files.forEach(fileObj => {
+      formData.append("files", fileObj.file);
     });
 
+    formData.append("names", JSON.stringify(customNames));
+
+    for (let pair of formData.entries()) {
+      console.log(pair[0], pair[1]);
+    }
+
     toast.promise(
-      axios.post("", formData, {
+      axios.post(`${baseUrl}/files`, formData, {
         headers: { "Content-Type": "multipart/form-data" },
       }),
       {
         loading: "Uploading...",
         success: (res) => {
-          if (res.data.code) setCode(res.data.code);
+          console.log("Response from backend:", res.data); 
+          if (res.data.key) setCode(res.data.key);
+
           setUploaded(true);
-          setFiles([]);
+          setFiles([]);          
+          setCustomNames([]);
+
           return "Upload successful!";
         },
         error: "Upload failed. Try again.",
@@ -69,24 +86,25 @@ export default function Upload() {
     );
   };
 
-  // Text Upload API
   const handleTextUpload = async () => {
     if (!text.trim()) return toast.error("Text cannot be empty.");
+    if (!textName.trim()) return toast.error("Please enter a name for your text."); 
 
     const payload = {
-      contentname: "User Text",
-      description: code ? `Linked to code: ${code}` : "",
+      contentname: textName, 
+      description: "",
       content: text,
       code: code || undefined
     };
 
     toast.promise(
-      axios.post("", payload),
+      axios.post(`${baseUrl}/text-content`, payload),
       {
         loading: "Saving text...",
         success: (res) => {
-          if (res.data.code) setCode(res.data.code);
+          if (res.data.ui) setCode(res.data.ui);
           setText("");
+          setTextName(""); 
           setUploaded(true);
           return "Text uploaded successfully!";
         },
@@ -157,9 +175,15 @@ export default function Upload() {
           {files.length > 0 && (
             <div className="space-y-3 max-h-96 overflow-y-auto pr-2 custom-scrollbar">
               {files.map((item, index) => (
-                <div key={index} className="bg-[#38175A] p-5 rounded-xl hover:bg-[#4a1f6e] transition-all duration-300 animate-[slideIn_0.3s_ease-out] group">
+                <div
+                  key={index}
+                  className="bg-[#38175A] p-5 rounded-xl hover:bg-[#4a1f6e] transition-all duration-300 animate-[slideIn_0.3s_ease-out] group"
+                >
+                  {/* Top Row: File Name + Remove Button */}
                   <div className="flex justify-between items-start mb-3">
-                    <p className="text-white font-semibold text-sm break-all pr-4">{item.file.name}</p>
+                    <p className="text-white font-semibold text-sm break-all pr-4">
+                      {item.file.name}
+                    </p>
                     <button
                       onClick={() => removeFile(index)}
                       className="text-red-400 hover:text-red-300 text-xl font-bold opacity-0 group-hover:opacity-100 transition-opacity duration-200"
@@ -167,18 +191,24 @@ export default function Upload() {
                       ×
                     </button>
                   </div>
-                  <input
-                    type="text"
-                    placeholder="Add description (optional)..."
-                    value={item.description}
-                    onChange={(e) => updateDescription(index, e.target.value)}
-                    className="w-full p-3 rounded-lg bg-[#2a1044] text-white text-sm outline-none border-2 border-transparent focus:border-[#838CE5] transition-all duration-300"
-                  />
+
+                  {/* Custom Name Input (NEW FEATURE) */}
+                  <div className="mt-1">
+                    <input
+                      type="text"
+                      placeholder="Enter custom name"
+                      className="w-full p-2 mt-1 rounded-md bg-[#50207A] text-white outline-none"
+                      onChange={(e) => {
+                        const updated = [...customNames];
+                        updated[index] = e.target.value;
+                        setCustomNames(updated);
+                      }}
+                    />
+                  </div>
                 </div>
               ))}
             </div>
           )}
-
           {!uploaded ? (
             <button
               onClick={handleFileUpload}
@@ -192,12 +222,31 @@ export default function Upload() {
               Upload {files.length > 0 && `(${files.length} file${files.length > 1 ? 's' : ''})`}
             </button>
           ) : (
-            <a 
-              href="/" 
-              className="bg-green-500 text-white px-8 py-4 rounded-xl font-bold text-center hover:bg-green-600 transition-all duration-300 hover:scale-105 animate-[fadeIn_0.4s_ease-out]"
-            >
-              ✓ Done — Return Home
-            </a>
+            <>
+              {/* SHOW CODE HERE */}
+              <div className="mt-4 p-4 bg-[#2a1044] rounded-xl border border-[#D6B9FC]">
+                <p className="text-lg text-gray-300">
+                  Your access code:
+                  <span className="font-mono text-[#D6B9FC] ml-2 text-xl font-bold">{code}</span>
+                </p>
+              </div>
+              
+              <div className="flex gap-4">
+                <button
+                  onClick={resetUpload}
+                  className="flex-1 bg-[#838CE5] text-black px-8 py-4 rounded-xl font-bold hover:bg-[#6e76dc] transition-all duration-300 hover:scale-105"
+                >
+                  Upload More Files
+                </button>
+                <a 
+                  href="/" 
+                  onClick={() => setCode('')} 
+                  className="flex-1 bg-green-500 text-white px-8 py-4 rounded-xl font-bold text-center hover:bg-green-600 transition-all duration-300 hover:scale-105 animate-[fadeIn_0.4s_ease-out]"
+                >
+                  ✓ Done — Return Home
+                </a>
+              </div>
+            </>
           )}
         </div>
       )}
@@ -205,6 +254,20 @@ export default function Upload() {
       {/* TEXT UPLOAD SECTION */}
       {tab === "text" && (
         <div className="flex flex-col gap-6 animate-[fadeIn_0.4s_ease-out]">
+          {/* TEXT NAME INPUT - NEW */}
+          <div>
+            <label className="block text-sm font-medium text-gray-400 mb-2">
+              Text Name
+            </label>
+            <input
+              type="text"
+              placeholder="Enter a name for your text..."
+              value={textName}
+              onChange={(e) => setTextName(e.target.value)}
+              className="w-full p-4 rounded-xl bg-[#38175A] text-white outline-none border-2 border-transparent focus:border-[#838CE5] transition-all duration-300"
+            />
+          </div>
+
           <div className="relative">
             <textarea
               placeholder="Type or paste your text here..."
@@ -220,9 +283,9 @@ export default function Upload() {
           {!uploaded ? (
             <button
               onClick={handleTextUpload}
-              disabled={!text.trim()}
+              disabled={!text.trim() || !textName.trim()}
               className={`bg-[#D6B9FC] text-black px-8 py-4 rounded-xl font-bold transition-all duration-300 ${
-                !text.trim() 
+                !text.trim() || !textName.trim()
                   ? "opacity-50 cursor-not-allowed" 
                   : "hover:bg-[#bda1f5] hover:scale-105 hover:shadow-lg cursor-pointer"
               }`}
@@ -230,17 +293,26 @@ export default function Upload() {
               Upload Text
             </button>
           ) : (
-            <a 
+            <>
+              {/* SHOW CODE HERE */}
+              {uploaded && (
+                <div className="mt-4 text-lg text-gray-300">
+                  Your access code:
+                  <span className="font-mono text-[#D6B9FC] ml-2">{code}</span>
+                </div>
+              )}
+              <a 
               href="/" 
               className="bg-green-500 text-white px-8 py-4 rounded-xl font-bold text-center hover:bg-green-600 transition-all duration-300 hover:scale-105 animate-[fadeIn_0.4s_ease-out]"
-            >
-              ✓ Done — Return Home
-            </a>
+              >
+                ✓ Done — Return Home
+              </a>
+            </>
           )}
         </div>
       )}
 
-      <style jsx>{`
+      <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@700&family=Inter:wght@300;400;600;700&display=swap');
         
         @keyframes fadeIn {

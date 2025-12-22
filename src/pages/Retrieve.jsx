@@ -6,17 +6,17 @@ export default function Retrieve() {
   const [code, setCode] = useState("");
   const [content, setContent] = useState(null);
   const [selectedFiles, setSelectedFiles] = useState([]);
-  const baseUrl=import.meta.env.VITE_BASEURL;
+  const baseUrl = import.meta.env.VITE_BASEURL;
 
-    const fetchContent = async () => {
+  const fetchContent = async () => {
     if (!code.trim()) return toast.error("Enter a valid code");
 
     try {
       toast.loading("Fetching content...");
-      
+
       let filesData = [];
-      let textData = null; 
-      
+      let textData = null;
+
       try {
         const filesRes = await axios.get(`${baseUrl}/files/${code}`);
         console.log("Files response:", filesRes.data);
@@ -31,26 +31,30 @@ export default function Retrieve() {
         const textRes = await axios.get(`${baseUrl}/text-content/${code}`);
         console.log("Text response:", textRes.data);
         if (textRes.data.success) {
-          textData = textRes.data.data; 
+          textData = textRes.data.data;
         }
       } catch (err) {
         console.log("Text error:", err);
       }
 
       console.log("Final filesData:", filesData);
-      console.log("Final textData:", textData); 
+      console.log("Final textData:", textData);
 
-      if (filesData.length === 0 && !textData) { 
+      if (filesData.length === 0 && !textData) {
         toast.dismiss();
         toast.error("Invalid Code or Nothing Found");
+        setContent(null);
+        setSelectedFiles([]);
         return;
       }
-      
+
       setContent({
         files: filesData,
-        textData: textData 
+        textData: textData,
+        retrievedCode: code
       });
       setSelectedFiles([]);
+      setCode("");
       toast.dismiss();
       toast.success("Content loaded!");
 
@@ -58,9 +62,11 @@ export default function Retrieve() {
       console.log("Outer error:", error);
       toast.dismiss();
       toast.error("Invalid Code or Nothing Found");
+      setContent(null);
+      setSelectedFiles([]);
     }
   };
-  
+
   const toggleSelection = (file) => {
     setSelectedFiles(prev =>
       prev.includes(file)
@@ -68,30 +74,30 @@ export default function Retrieve() {
         : [...prev, file]
     );
   };
-  
+
   // Download selected individually (no zip)
   const downloadSelected = async () => {
     if (selectedFiles.length === 0) return toast.error("Select at least one file.");
 
     toast.success(`Starting download of ${selectedFiles.length} file(s)...`);
-    
+
     for (let i = 0; i < selectedFiles.length; i++) {
       const file = selectedFiles[i];
-      
+
       try {
         const response = await fetch(file.url);
         const blob = await response.blob();
         const url = window.URL.createObjectURL(blob);
-        
+
         const link = document.createElement('a');
         link.href = url;
         link.download = file.name || file.originalName;
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
-        
+
         window.URL.revokeObjectURL(url);
-        
+
         // Wait before next download
         if (i < selectedFiles.length - 1) {
           await new Promise(resolve => setTimeout(resolve, 1000));
@@ -107,24 +113,24 @@ export default function Retrieve() {
     if (!content?.files?.length) return toast.error("No files to download");
 
     toast.success(`Starting download of ${content.files.length} file(s)...`);
-    
+
     for (let i = 0; i < content.files.length; i++) {
       const file = content.files[i];
-      
+
       try {
         const response = await fetch(file.url);
         const blob = await response.blob();
         const url = window.URL.createObjectURL(blob);
-        
+
         const link = document.createElement('a');
         link.href = url;
         link.download = file.name || file.originalName;
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
-        
+
         window.URL.revokeObjectURL(url);
-        
+
         // Wait before next download
         if (i < content.files.length - 1) {
           await new Promise(resolve => setTimeout(resolve, 1000));
@@ -179,7 +185,7 @@ export default function Retrieve() {
             <h3 className="text-xl sm:text-2xl font-bold text-white flex items-center gap-2 sm:gap-3 break-all">
               <i className="fa-solid fa-folder-open text-[#D6B9FC] shrink-0"></i>
               <span className="hidden sm:inline">Code:</span>
-              <span className="text-[#D6B9FC] font-mono text-base sm:text-xl">{code}</span>
+              <span className="text-[#D6B9FC] font-mono text-base sm:text-xl">{content.retrievedCode}</span>
             </h3>
           </div>
 
@@ -208,12 +214,12 @@ export default function Retrieve() {
 
               <div className="space-y-3 max-h-96 overflow-y-auto pr-2 mb-4 sm:mb-6 custom-scrollbar">
                 {content.files.map((file, index) => (
-                  <div 
-                    key={index} 
+                  <div
+                    key={index}
                     className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4 bg-[#1e0c33] p-4 sm:p-5 rounded-xl hover:bg-[#2a1044] transition-all duration-300 border border-transparent hover:border-gray-700 group animate-[slideIn_0.3s_ease-out]"
                     style={{ animationDelay: `${index * 0.05}s` }}
                   >
-                    
+
                     {/* Checkbox and File Info */}
                     <div className="flex items-start gap-3 sm:gap-4 flex-1 min-w-0 w-full">
                       <input
@@ -244,14 +250,14 @@ export default function Retrieve() {
                           const response = await fetch(file.url);
                           const blob = await response.blob();
                           const url = window.URL.createObjectURL(blob);
-                          
+
                           const link = document.createElement('a');
                           link.href = url;
                           link.download = file.name || file.originalName;
                           document.body.appendChild(link);
                           link.click();
                           document.body.removeChild(link);
-                          
+
                           window.URL.revokeObjectURL(url);
                           toast.success("Download started!");
                         } catch (error) {
@@ -273,11 +279,10 @@ export default function Retrieve() {
                 <button
                   onClick={downloadSelected}
                   disabled={selectedFiles.length === 0}
-                  className={`bg-[#D6B9FC] text-black px-6 sm:px-8 py-3 sm:py-4 rounded-xl font-bold transition-all duration-300 flex items-center justify-center gap-2 text-sm sm:text-base ${
-                    selectedFiles.length === 0
+                  className={`bg-[#D6B9FC] text-black px-6 sm:px-8 py-3 sm:py-4 rounded-xl font-bold transition-all duration-300 flex items-center justify-center gap-2 text-sm sm:text-base ${selectedFiles.length === 0
                       ? "opacity-50 cursor-not-allowed"
                       : "hover:bg-[#bda1f5] hover:scale-105 hover:shadow-lg"
-                  }`}
+                    }`}
                 >
                   <i className="fa-solid fa-check-double"></i>
                   <span>Download Selected {selectedFiles.length > 0 && `(${selectedFiles.length})`}</span>

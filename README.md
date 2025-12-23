@@ -1,16 +1,93 @@
-# React + Vite
+# GetIt - Secure File & Text Sharing Platform
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+<div align="center">
+  
+  ### Share files and text securely with unique access codes
+  
+</div>
 
-Currently, two official plugins are available:
+---
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## 📖 Overview
 
-## React Compiler
+**GetIt** is a modern, minimalist web application that allows users to securely upload and share files or text content. Each upload generates a unique 6-character access code, making it easy to share content without complicated links or authentication.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+### ✨ Key Features
 
-## Expanding the ESLint configuration
+- 📁 **File Uploads** - Upload up to 10 files (max 10MB each) at once
+- 📝 **Text Sharing** - Share formatted text content with custom names
+- 🔐 **Secure Access Codes** - Each upload gets a unique 6-character code
+- 📦 **Batch Operations** - Download individual files or all at once
+- 👁️ **File Preview Support**
+  - Images: jpg, jpeg, png, gif, webp, svg
+  - Documents: PDF
+  - Text files: txt, md, json, csv
+- 📱 **Fully Responsive** - Works seamlessly on desktop, tablet, and mobile
+- ⚡ **Fast & Reliable** - Built with React and optimized for performance
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+---
+
+## 🚀 Demo
+
+**Live Site:** https://get-it-orpin.vercel.app/
+
+---
+
+## 🛠️ Tech Stack
+
+### Frontend
+- React 18
+- Vite
+- Tailwind CSS
+- Axios
+- React Hot Toast
+- Font Awesome
+
+### Backend
+- Node.js & Express
+- MongoDB
+- Supabase Storage
+- Express Validator
+
+### Deployment
+- Frontend: Vercel
+- Backend: Render
+- Storage: Supabase
+
+---
+
+## 🎯 Usage
+
+### Uploading Files
+1. Navigate to the Upload page
+2. Choose up to 10 files
+3. Optionally enter custom names
+4. Upload and receive an access code
+5. Share the code
+
+### Uploading Text
+1. Go to Upload → Text
+2. Enter a name
+3. Paste or type text
+4. Upload to receive a code
+
+### Retrieving Content
+1. Open Retrieve page
+2. Enter the access code
+3. View text, preview supported files, or download files
+4. Select specific files or download all
+
+---
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Commit changes
+4. Push and open a Pull Request
+
+---
+
+<div align="center">
+  Star this repository if you find it useful
+</div>

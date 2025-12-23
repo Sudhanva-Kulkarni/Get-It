@@ -13,6 +13,14 @@ export default function Upload() {
 
   const baseUrl = import.meta.env.VITE_BASEURL;
 
+  const copyToClipboard = () => {
+    navigator.clipboard.writeText(code).then(() => {
+      toast.success("Code copied to clipboard!");
+    }).catch(() => {
+      toast.error("Failed to copy code");
+    });
+  };
+
   const resetUpload = () => {
     setUploaded(false);
     setFiles([]);         
@@ -239,11 +247,18 @@ export default function Upload() {
           ) : (
             <>
               {/* SHOW CODE HERE */}
-              <div className="mt-4 p-4 bg-[#2a1044] rounded-xl border border-[#D6B9FC]">
+              <div className="mt-4 p-4 bg-[#2a1044] rounded-xl border border-[#D6B9FC] flex items-center justify-between">
                 <p className="text-lg text-gray-300">
                   Your access code:
                   <span className="font-mono text-[#D6B9FC] ml-2 text-xl font-bold">{code}</span>
                 </p>
+                <button
+                  onClick={copyToClipboard}
+                  className="ml-4 text-[#D6B9FC] hover:text-[#bda1f5] transition-colors duration-200"
+                  title="Copy to clipboard"
+                >
+                  <i className="fa-solid fa-copy text-xl"></i>
+                </button>
               </div>
               
               <div className="flex gap-4">
@@ -310,11 +325,18 @@ export default function Upload() {
           ) : (
             <>
               {/* SHOW CODE HERE */}
-              <div className="mt-4 p-4 bg-[#2a1044] rounded-xl border border-[#D6B9FC]">
+              <div className="mt-4 p-4 bg-[#2a1044] rounded-xl border border-[#D6B9FC] flex items-center justify-between">
                 <p className="text-lg text-gray-300">
                   Your access code:
                   <span className="font-mono text-[#D6B9FC] ml-2 text-xl font-bold">{code}</span>
                 </p>
+                <button
+                  onClick={copyToClipboard}
+                  className="ml-4 text-[#D6B9FC] hover:text-[#bda1f5] transition-colors duration-200"
+                  title="Copy to clipboard"
+                >
+                  <i className="fa-solid fa-copy text-xl"></i>
+                </button>
               </div>
 
               <div className="flex gap-4">

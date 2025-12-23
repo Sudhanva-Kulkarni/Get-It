@@ -6,6 +6,8 @@ export default function Retrieve() {
   const [code, setCode] = useState("");
   const [content, setContent] = useState(null);
   const [selectedFiles, setSelectedFiles] = useState([]);
+  const [previewFile, setPreviewFile] = useState(null);
+  const [showPreviewModal, setShowPreviewModal] = useState(false);
   const baseUrl = import.meta.env.VITE_BASEURL;
 
   const fetchContent = async () => {
@@ -75,7 +77,55 @@ export default function Retrieve() {
     );
   };
 
-  // Download selected individually (no zip)
+  const isPreviewable = (file) => {
+    const imageTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml'];
+    const textTypes = ['text/plain', 'text/csv', 'application/json'];
+    const pdfType = 'application/pdf';
+    
+    return imageTypes.includes(file.mimetype) || 
+           textTypes.includes(file.mimetype) || 
+           file.mimetype === pdfType ||
+           file.originalName.endsWith('.md');
+  };
+
+  const handlePreview = async (file) => {
+    try {
+      toast.loading("Loading preview...");
+      
+      const response = await fetch(file.url);
+      const blob = await response.blob();
+      
+      let previewData = {
+        file: file,
+        type: file.mimetype,
+        url: file.url
+      };
+
+      if (file.mimetype.startsWith('text/') || file.mimetype === 'application/json' || file.originalName.endsWith('.md')) {
+        const text = await blob.text();
+        previewData.textContent = text;
+      } else {
+        previewData.blobUrl = window.URL.createObjectURL(blob);
+      }
+
+      setPreviewFile(previewData);
+      setShowPreviewModal(true);
+      toast.dismiss();
+    } catch (error) {
+      toast.dismiss();
+      console.error("Preview failed:", error);
+      toast.error("Failed to load preview");
+    }
+  };
+
+  const closePreview = () => {
+    if (previewFile?.blobUrl) {
+      window.URL.revokeObjectURL(previewFile.blobUrl);
+    }
+    setShowPreviewModal(false);
+    setPreviewFile(null);
+  };
+
   const downloadSelected = async () => {
     if (selectedFiles.length === 0) return toast.error("Select at least one file.");
 
@@ -108,7 +158,7 @@ export default function Retrieve() {
     }
   };
 
-  // Download all
+
   const downloadAll = async () => {
     if (!content?.files?.length) return toast.error("No files to download");
 
@@ -131,7 +181,6 @@ export default function Retrieve() {
 
         window.URL.revokeObjectURL(url);
 
-        // Wait before next download
         if (i < content.files.length - 1) {
           await new Promise(resolve => setTimeout(resolve, 1000));
         }
@@ -140,6 +189,7 @@ export default function Retrieve() {
       }
     }
   };
+
   return (
     <div className="min-h-screen p-4 sm:p-6 md:p-8 max-w-5xl mx-auto animate-[fadeIn_0.6s_ease-out]" style={{ fontFamily: "'Inter', 'Segoe UI', system-ui, sans-serif" }}>
       <Toaster position="top-center" />
@@ -243,33 +293,47 @@ export default function Retrieve() {
                       </div>
                     </div>
 
-                    {/* Single File Download */}
-                    <button
-                      onClick={async () => {
-                        try {
-                          const response = await fetch(file.url);
-                          const blob = await response.blob();
-                          const url = window.URL.createObjectURL(blob);
+                    {/* Action Buttons */}
+                    <div className="flex gap-2 w-full sm:w-auto shrink-0">
+                      {/* Preview Button */}
+                      {isPreviewable(file) && (
+                        <button
+                          onClick={() => handlePreview(file)}
+                          className="flex-1 sm:flex-none bg-[#D6B9FC] text-black px-4 sm:px-5 py-2 text-xs sm:text-sm rounded-lg font-semibold hover:bg-[#bda1f5] transition-all duration-300 hover:scale-105"
+                        >
+                          <i className="fa-solid fa-eye mr-1"></i>
+                          Preview
+                        </button>
+                      )}
 
-                          const link = document.createElement('a');
-                          link.href = url;
-                          link.download = file.name || file.originalName;
-                          document.body.appendChild(link);
-                          link.click();
-                          document.body.removeChild(link);
+                      {/* Download Button */}
+                      <button
+                        onClick={async () => {
+                          try {
+                            const response = await fetch(file.url);
+                            const blob = await response.blob();
+                            const url = window.URL.createObjectURL(blob);
 
-                          window.URL.revokeObjectURL(url);
-                          toast.success("Download started!");
-                        } catch (error) {
-                          console.error("Download failed:", error);
-                          toast.error("Download failed. Try again.");
-                        }
-                      }}
-                      className="w-full sm:w-auto bg-[#838CE5] text-black px-4 sm:px-5 py-2 text-xs sm:text-sm rounded-lg font-semibold hover:bg-[#6e76dc] transition-all duration-300 hover:scale-105 opacity-80 group-hover:opacity-100 shrink-0"
-                    >
-                      <i className="fa-solid fa-download mr-1"></i>
-                      Download
-                    </button>
+                            const link = document.createElement('a');
+                            link.href = url;
+                            link.download = file.name || file.originalName;
+                            document.body.appendChild(link);
+                            link.click();
+                            document.body.removeChild(link);
+
+                            window.URL.revokeObjectURL(url);
+                            toast.success("Download started!");
+                          } catch (error) {
+                            console.error("Download failed:", error);
+                            toast.error("Download failed. Try again.");
+                          }
+                        }}
+                        className="flex-1 sm:flex-none bg-[#838CE5] text-black px-4 sm:px-5 py-2 text-xs sm:text-sm rounded-lg font-semibold hover:bg-[#6e76dc] transition-all duration-300 hover:scale-105 opacity-80 group-hover:opacity-100"
+                      >
+                        <i className="fa-solid fa-download mr-1"></i>
+                        Download
+                      </button>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -313,6 +377,97 @@ export default function Retrieve() {
         <div className="text-center py-12 sm:py-16 animate-[fadeIn_0.8s_ease-out_0.4s_both]">
           <i className="fa-solid fa-key text-5xl sm:text-6xl text-gray-700 mb-4"></i>
           <p className="text-gray-500 text-base sm:text-lg px-4">Enter an access code to retrieve your content</p>
+        </div>
+      )}
+
+      {/* Preview Modal */}
+      {showPreviewModal && previewFile && (
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4 animate-[fadeIn_0.3s_ease-out]"
+          onClick={closePreview}
+        >
+          <div 
+            className="bg-[#2a1044] rounded-2xl max-w-4xl w-full max-h-[90vh] flex flex-col overflow-hidden relative animate-[slideDown_0.3s_ease-out]"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Modal Header */}
+            <div className="flex items-center justify-between p-4 sm:p-6 border-b border-gray-700 shrink-0">
+              <h3 className="text-lg sm:text-xl font-bold text-white truncate pr-4">
+                <i className="fa-solid fa-eye mr-2 text-[#D6B9FC]"></i>
+                {previewFile.file.name}
+              </h3>
+              <button
+                onClick={closePreview}
+                className="text-gray-400 hover:text-white text-2xl transition-colors duration-200 shrink-0"
+              >
+                ×
+              </button>
+            </div>
+
+            {/* Modal Content */}
+            <div className="p-4 sm:p-6 overflow-auto flex-1">
+              {/* Image Preview */}
+              {previewFile.type.startsWith('image/') && (
+                <img 
+                  src={previewFile.blobUrl} 
+                  alt={previewFile.file.name}
+                  className="max-w-full h-auto mx-auto rounded-lg"
+                />
+              )}
+
+              {/* PDF Preview */}
+              {previewFile.type === 'application/pdf' && (
+                <iframe
+                  src={previewFile.blobUrl}
+                  className="w-full h-[60vh] rounded-lg border border-gray-700"
+                  title="PDF Preview"
+                />
+              )}
+
+              {/* Text Preview */}
+              {(previewFile.type.startsWith('text/') || previewFile.type === 'application/json' || previewFile.file.originalName.endsWith('.md')) && (
+                <pre className="bg-[#1e0c33] p-4 rounded-lg text-gray-300 text-sm overflow-auto whitespace-pre-wrap wrap-break-word max-h-[60vh]">
+                  {previewFile.textContent}
+                </pre>
+              )}
+            </div>
+
+            {/* Modal Footer */}
+            <div className="flex flex-col sm:flex-row gap-3 p-4 sm:p-6 border-t border-gray-700 shrink-0">
+              <button
+                onClick={async () => {
+                  try {
+                    const response = await fetch(previewFile.file.url);
+                    const blob = await response.blob();
+                    const url = window.URL.createObjectURL(blob);
+
+                    const link = document.createElement('a');
+                    link.href = url;
+                    link.download = previewFile.file.name || previewFile.file.originalName;
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+
+                    window.URL.revokeObjectURL(url);
+                    toast.success("Download started!");
+                  } catch (error) {
+                    console.error("Download failed:", error);
+                    toast.error("Download failed. Try again.");
+                  }
+                }}
+                className="flex-1 bg-[#838CE5] text-black px-6 py-3 rounded-xl font-bold hover:bg-[#6e76dc] transition-all duration-300"
+              >
+                <i className="fa-solid fa-download mr-2"></i>
+                Download
+              </button>
+              <button
+                onClick={closePreview}
+                className="flex-1 bg-gray-700 text-white px-6 py-3 rounded-xl font-bold hover:bg-gray-600 transition-all duration-300"
+              >
+                Close
+              </button>
+            </div>
+          </div>
         </div>
       )}
 

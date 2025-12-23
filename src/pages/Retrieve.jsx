@@ -10,6 +10,16 @@ export default function Retrieve() {
   const [showPreviewModal, setShowPreviewModal] = useState(false);
   const baseUrl = import.meta.env.VITE_BASEURL;
 
+  const copyTextToClipboard = () => {
+    if (content?.textData?.content) {
+      navigator.clipboard.writeText(content.textData.content).then(() => {
+        toast.success("Text copied to clipboard!");
+      }).catch(() => {
+        toast.error("Failed to copy text");
+      });
+    }
+  };
+
   const fetchContent = async () => {
     if (!code.trim()) return toast.error("Enter a valid code");
 
@@ -242,10 +252,19 @@ export default function Retrieve() {
           {/* TEXT CONTENT */}
           {content.textData && (
             <div className="mb-6 sm:mb-8 animate-[slideIn_0.4s_ease-out]">
-              <h4 className="text-base sm:text-lg text-[#D6B9FC] font-semibold mb-3 flex items-center gap-2 wrap-break-word">
-                <i className="fa-solid fa-file-lines shrink-0"></i>
-                <span className="break-all">{content.textData.contentname}</span>
-              </h4>
+              <div className="flex items-center justify-between mb-3">
+                <h4 className="text-base sm:text-lg text-[#D6B9FC] font-semibold flex items-center gap-2 wrap-break-word">
+                  <i className="fa-solid fa-file-lines shrink-0"></i>
+                  <span className="break-all">{content.textData.contentname}</span>
+                </h4>
+                <button
+                  onClick={copyTextToClipboard}
+                  className="ml-4 text-[#D6B9FC] hover:text-[#bda1f5] transition-colors duration-200 shrink-0"
+                  title="Copy text to clipboard"
+                >
+                  <i className="fa-solid fa-copy text-lg sm:text-xl"></i>
+                </button>
+              </div>
               <div className="bg-[#1e0c33] p-4 sm:p-6 rounded-xl border border-gray-800 hover:border-gray-700 transition-colors duration-300">
                 <p className="text-gray-300 whitespace-pre-wrap leading-relaxed text-sm sm:text-base wrap-break-word">
                   {content.textData.content}

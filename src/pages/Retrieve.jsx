@@ -91,20 +91,20 @@ export default function Retrieve() {
     const imageTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml'];
     const textTypes = ['text/plain', 'text/csv', 'application/json'];
     const pdfType = 'application/pdf';
-    
-    return imageTypes.includes(file.mimetype) || 
-           textTypes.includes(file.mimetype) || 
-           file.mimetype === pdfType ||
-           file.originalName.endsWith('.md');
+
+    return imageTypes.includes(file.mimetype) ||
+      textTypes.includes(file.mimetype) ||
+      file.mimetype === pdfType ||
+      file.originalName.endsWith('.md');
   };
 
   const handlePreview = async (file) => {
     try {
       toast.loading("Loading preview...");
-      
+
       const response = await fetch(file.url);
       const blob = await response.blob();
-      
+
       let previewData = {
         file: file,
         type: file.mimetype,
@@ -281,7 +281,7 @@ export default function Retrieve() {
                 Files ({content.files.length})
               </h4>
 
-              <div className="space-y-3 max-h-96 overflow-y-auto pr-2 mb-4 sm:mb-6 custom-scrollbar">
+              <div className="space-y-3 max-h-[70vh] overflow-y-auto pr-2 mb-4 sm:mb-6 custom-scrollbar">
                 {content.files.map((file, index) => (
                   <div
                     key={index}
@@ -363,8 +363,8 @@ export default function Retrieve() {
                   onClick={downloadSelected}
                   disabled={selectedFiles.length === 0}
                   className={`bg-[#D6B9FC] text-black px-6 sm:px-8 py-3 sm:py-4 rounded-xl font-bold transition-all duration-300 flex items-center justify-center gap-2 text-sm sm:text-base ${selectedFiles.length === 0
-                      ? "opacity-50 cursor-not-allowed"
-                      : "hover:bg-[#bda1f5] hover:scale-105 hover:shadow-lg"
+                    ? "opacity-50 cursor-not-allowed"
+                    : "hover:bg-[#bda1f5] hover:scale-105 hover:shadow-lg"
                     }`}
                 >
                   <i className="fa-solid fa-check-double"></i>
@@ -401,12 +401,12 @@ export default function Retrieve() {
 
       {/* Preview Modal */}
       {showPreviewModal && previewFile && (
-        <div 
+        <div
           className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4 animate-[fadeIn_0.3s_ease-out]"
           onClick={closePreview}
         >
-          <div 
-            className="bg-[#2a1044] rounded-2xl max-w-4xl w-full max-h-[90vh] flex flex-col overflow-hidden relative animate-[slideDown_0.3s_ease-out]"
+          <div
+            className="bg-[#2a1044] rounded-2xl w-full h-full max-w-[98vw] max-height-[98vh] max-h-[98vh] flex flex-col overflow-hidden relative animate-[slideDown_0.3s_ease-out]"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Modal Header */}
@@ -424,13 +424,13 @@ export default function Retrieve() {
             </div>
 
             {/* Modal Content */}
-            <div className="p-4 sm:p-6 overflow-auto flex-1">
+            <div className="p-3 sm:p-4 overflow-auto flex-1 min-h-0">
               {/* Image Preview */}
               {previewFile.type.startsWith('image/') && (
-                <img 
-                  src={previewFile.blobUrl} 
+                <img
+                  src={previewFile.blobUrl}
                   alt={previewFile.file.name}
-                  className="max-w-full h-auto mx-auto rounded-lg"
+                  className="w-full h-full min-h-[70vh] object-contain rounded-lg"
                 />
               )}
 
@@ -438,14 +438,14 @@ export default function Retrieve() {
               {previewFile.type === 'application/pdf' && (
                 <iframe
                   src={previewFile.blobUrl}
-                  className="w-full h-[60vh] rounded-lg border border-gray-700"
+                  className="w-full h-full min-h-[70vh] rounded-lg border border-gray-700"
                   title="PDF Preview"
                 />
               )}
 
               {/* Text Preview */}
               {(previewFile.type.startsWith('text/') || previewFile.type === 'application/json' || previewFile.file.originalName.endsWith('.md')) && (
-                <pre className="bg-[#1e0c33] p-4 rounded-lg text-gray-300 text-sm overflow-auto whitespace-pre-wrap wrap-break-word max-h-[60vh]">
+                <pre className="bg-[#1e0c33] p-4 rounded-lg text-gray-300 text-sm overflow-auto whitespace-pre-wrap wrap-break-word h-full min-h-[70vh]">
                   {previewFile.textContent}
                 </pre>
               )}

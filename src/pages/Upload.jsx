@@ -8,8 +8,9 @@ export default function Upload() {
   const [uploaded, setUploaded] = useState(false);
   const [files, setFiles] = useState([]);
   const [text, setText] = useState("");
-  const [textName, setTextName] = useState(""); 
+  const [textName, setTextName] = useState("");
   const [customNames, setCustomNames] = useState([]);
+  const [isUploading, setIsUploading] = useState(false);
 
   const baseUrl = import.meta.env.VITE_BASEURL;
 
@@ -23,7 +24,7 @@ export default function Upload() {
 
   const resetUpload = () => {
     setUploaded(false);
-    setFiles([]);         
+    setFiles([]);
     setCustomNames([]);
   };
 
@@ -33,7 +34,7 @@ export default function Upload() {
     setText("");
     setTextName("");
   };
-  
+
   const selectFiles = (e) => {
     const chosenFiles = [...e.target.files];
 
@@ -63,20 +64,25 @@ export default function Upload() {
     if (files.length === 0)
       return toast.error("Please select files first.");
 
-    if (customNames.length !== files.length)
-      return toast.error("Please enter a name for each file.");
-
     const formData = new FormData();
 
     if (code) {
       formData.append("key", code);
     }
 
+    const namesForUpload = files.map((fileObj, index) => {
+      const provided = customNames[index];
+      return provided && provided.trim() ? provided.trim() : fileObj.file.name;
+    });
+
     files.forEach(fileObj => {
       formData.append("files", fileObj.file);
     });
 
-    formData.append("names", JSON.stringify(customNames));
+    formData.append("names", JSON.stringify(namesForUpload));
+
+    setIsUploading(true);
+    toast.loading("Uploading files...");
 
     try {
       const response = await axios.post(`${baseUrl}/files`, formData, {
@@ -86,25 +92,29 @@ export default function Upload() {
       if (response.data.success) {
         if (response.data.key) setCode(response.data.key);
         setUploaded(true);
-        setFiles([]);          
+        setFiles([]);
         setCustomNames([]);
+        toast.dismiss();
         toast.success("Upload successful!");
       }
     } catch (error) {
+      toast.dismiss();
       if (error.response?.status === 404) {
         toast.error("Invalid code. Please check your code or create a new upload.");
       } else {
         toast.error("Upload failed. Try again.");
       }
+    } finally {
+      setIsUploading(false);
     }
   };
 
   const handleTextUpload = async () => {
     if (!text.trim()) return toast.error("Text cannot be empty.");
-    if (!textName.trim()) return toast.error("Please enter a name for your text."); 
+    if (!textName.trim()) return toast.error("Please enter a name for your text.");
 
     const payload = {
-      contentname: textName, 
+      contentname: textName,
       description: "",
       content: text
     };
@@ -112,11 +122,11 @@ export default function Upload() {
     try {
       toast.loading("Saving text...");
       const response = await axios.post(`${baseUrl}/text-content`, payload);
-      
+
       if (response.data.ui) {
         setCode(response.data.ui);
         setText("");
-        setTextName(""); 
+        setTextName("");
         setUploaded(true);
         toast.dismiss();
         toast.success("Text uploaded successfully!");
@@ -144,11 +154,10 @@ export default function Upload() {
         {["file", "text"].map(type => (
           <button
             key={type}
-            className={`px-6 py-3 rounded-xl font-semibold tracking-wide transition-all duration-300 ${
-              tab === type 
-                ? "bg-[#D6B9FC] text-black scale-105 shadow-lg" 
-                : "bg-[#38175A] text-white hover:bg-[#4a1f6e]"
-            }`}
+            className={`px-6 py-3 rounded-xl font-semibold tracking-wide transition-all duration-300 ${tab === type
+              ? "bg-[#D6B9FC] text-black scale-105 shadow-lg"
+              : "bg-[#38175A] text-white hover:bg-[#4a1f6e]"
+              }`}
             onClick={() => setTab(type)}
           >
             {type === "file" ? (
@@ -235,14 +244,23 @@ export default function Upload() {
           {!uploaded ? (
             <button
               onClick={handleFileUpload}
-              disabled={files.length === 0}
-              className={`bg-[#D6B9FC] text-black font-bold px-8 py-4 rounded-xl transition-all duration-300 ${
-                files.length === 0 
-                  ? "opacity-50 cursor-not-allowed" 
-                  : "hover:bg-[#bda1f5] hover:scale-105 hover:shadow-lg cursor-pointer"
-              }`}
+              disabled={files.length === 0 || isUploading}
+              className={`bg-[#D6B9FC] text-black font-bold px-8 py-4 rounded-xl transition-all duration-300 flex items-center justify-center gap-2 ${files.length === 0 || isUploading
+                ? "opacity-50 cursor-not-allowed"
+                : "hover:bg-[#bda1f5] hover:scale-105 hover:shadow-lg cursor-pointer"
+                }`}
             >
-              Upload {files.length > 0 && `(${files.length} file${files.length > 1 ? 's' : ''})`}
+              {isUploading ? (
+                <>
+                  <svg className="animate-spin h-5 w-5 text-black" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  Uploading...
+                </>
+              ) : (
+                <>Upload {files.length > 0 && `(${files.length} file${files.length > 1 ? 's' : ''})`}</>
+              )}
             </button>
           ) : (
             <>
@@ -260,7 +278,7 @@ export default function Upload() {
                   <i className="fa-solid fa-copy text-xl"></i>
                 </button>
               </div>
-              
+
               <div className="flex gap-4">
                 <button
                   onClick={resetUpload}
@@ -268,9 +286,9 @@ export default function Upload() {
                 >
                   Upload More Files
                 </button>
-                <a 
-                  href="/" 
-                  onClick={() => setCode('')} 
+                <a
+                  href="/"
+                  onClick={() => setCode('')}
                   className="flex-1 bg-green-500 text-white px-8 py-4 rounded-xl font-bold text-center hover:bg-green-600 transition-all duration-300 hover:scale-105 animate-[fadeIn_0.4s_ease-out]"
                 >
                   ✓ Done — Return Home
@@ -314,11 +332,10 @@ export default function Upload() {
             <button
               onClick={handleTextUpload}
               disabled={!text.trim() || !textName.trim()}
-              className={`bg-[#D6B9FC] text-black px-8 py-4 rounded-xl font-bold transition-all duration-300 ${
-                !text.trim() || !textName.trim()
-                  ? "opacity-50 cursor-not-allowed" 
-                  : "hover:bg-[#bda1f5] hover:scale-105 hover:shadow-lg cursor-pointer"
-              }`}
+              className={`bg-[#D6B9FC] text-black px-8 py-4 rounded-xl font-bold transition-all duration-300 ${!text.trim() || !textName.trim()
+                ? "opacity-50 cursor-not-allowed"
+                : "hover:bg-[#bda1f5] hover:scale-105 hover:shadow-lg cursor-pointer"
+                }`}
             >
               Upload Text
             </button>
@@ -346,8 +363,8 @@ export default function Upload() {
                 >
                   Upload New Text
                 </button>
-                <a 
-                  href="/" 
+                <a
+                  href="/"
                   className="flex-1 bg-green-500 text-white px-8 py-4 rounded-xl font-bold text-center hover:bg-green-600 transition-all duration-300 hover:scale-105 animate-[fadeIn_0.4s_ease-out]"
                 >
                   ✓ Done — Return Home

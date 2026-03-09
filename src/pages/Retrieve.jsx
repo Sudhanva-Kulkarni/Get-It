@@ -234,18 +234,31 @@ export default function Retrieve() {
           Access Code
         </label>
         <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
-          <input
-            type="text"
-            placeholder="Enter your code"
-            value={code}
-            onChange={(e) => setCode(e.target.value.toLowerCase())}
-            onKeyPress={(e) => e.key === 'Enter' && fetchContent()}
-            className="flex-1 p-3 sm:p-4 rounded-xl bg-[#38175A] text-white outline-none border-2 border-transparent focus:border-[#838CE5] transition-all duration-300 text-base sm:text-lg"
-          />
+          <div className="flex-1">
+            <input
+              type="text"
+              placeholder="Enter your code"
+              value={code}
+              onChange={(e) => setCode(e.target.value.toLowerCase())}
+              onKeyPress={(e) => e.key === 'Enter' && code.trim().length === 6 && fetchContent()}
+              maxLength={6}
+              className="w-full p-3 sm:p-4 rounded-xl bg-[#38175A] text-white outline-none border-2 border-transparent focus:border-[#838CE5] transition-all duration-300 text-base sm:text-lg"
+            />
+            {code.trim().length > 0 && code.trim().length < 6 && (
+              <p className="text-red-400 text-sm mt-2">
+                <i className="fa-solid fa-exclamation-circle mr-1"></i>
+                Code must be exactly 6 characters
+              </p>
+            )}
+          </div>
           <button
-            className="bg-[#838CE5] px-6 sm:px-8 py-3 sm:py-4 rounded-xl font-bold hover:bg-[#6e76dc] transition-all duration-300 hover:scale-105 hover:shadow-lg text-sm sm:text-base disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            className={`bg-[#838CE5] px-6 sm:px-8 py-3 sm:py-4 rounded-xl font-bold transition-all duration-300 hover:shadow-lg text-sm sm:text-base flex items-center justify-center gap-2 self-start shrink-0 ${
+              isFetching || code.trim().length !== 6
+                ? "opacity-50 cursor-not-allowed"
+                : "hover:bg-[#6e76dc] hover:scale-105"
+            }`}
             onClick={fetchContent}
-            disabled={isFetching}
+            disabled={isFetching || code.trim().length !== 6}
           >
             {isFetching ? (
               <>

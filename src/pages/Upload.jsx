@@ -3,6 +3,7 @@ import axios from "axios";
 import toast, { Toaster } from "react-hot-toast";
 
 export default function Upload() {
+  const [isUploadingText, setIsUploadingText] = useState(false);
   const [tab, setTab] = useState("file");
   const [code, setCode] = useState("");
   const [uploaded, setUploaded] = useState(false);
@@ -119,8 +120,10 @@ export default function Upload() {
       content: text
     };
 
+    setIsUploadingText(true);
+    toast.loading("Saving text...");
+
     try {
-      toast.loading("Saving text...");
       const response = await axios.post(`${baseUrl}/text-content`, payload);
 
       if (response.data.ui) {
@@ -135,6 +138,8 @@ export default function Upload() {
       toast.dismiss();
       console.error("Upload error:", error.response?.data);
       toast.error("Upload failed. Try again.");
+    } finally {
+      setIsUploadingText(false);
     }
   };
 
@@ -179,7 +184,7 @@ export default function Upload() {
             type="text"
             placeholder="Enter existing code to add more files"
             value={code}
-            onChange={(e) => setCode(e.target.value)}
+            onChange={(e) => setCode(e.target.value.toLowerCase())}
             className="w-full p-4 rounded-xl bg-[#38175A] text-white outline-none border-2 border-transparent focus:border-[#838CE5] transition-all duration-300"
           />
         </div>
@@ -331,13 +336,24 @@ export default function Upload() {
           {!uploaded ? (
             <button
               onClick={handleTextUpload}
-              disabled={!text.trim() || !textName.trim()}
-              className={`bg-[#D6B9FC] text-black px-8 py-4 rounded-xl font-bold transition-all duration-300 ${!text.trim() || !textName.trim()
-                ? "opacity-50 cursor-not-allowed"
-                : "hover:bg-[#bda1f5] hover:scale-105 hover:shadow-lg cursor-pointer"
-                }`}
+              disabled={!text.trim() || !textName.trim() || isUploadingText}
+              className={`bg-[#D6B9FC] text-black px-8 py-4 rounded-xl font-bold transition-all duration-300 flex items-center justify-center gap-2 ${
+                !text.trim() || !textName.trim() || isUploadingText
+                  ? "opacity-50 cursor-not-allowed"
+                  : "hover:bg-[#bda1f5] hover:scale-105 hover:shadow-lg cursor-pointer"
+              }`}
             >
-              Upload Text
+              {isUploadingText ? (
+                <>
+                  <svg className="animate-spin h-5 w-5 text-black" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  Uploading...
+                </>
+              ) : (
+                "Upload Text"
+              )}
             </button>
           ) : (
             <>

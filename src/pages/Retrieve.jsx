@@ -3,6 +3,8 @@ import toast, { Toaster } from "react-hot-toast";
 import axios from "axios"
 
 export default function Retrieve() {
+  const [isFetching, setIsFetching] = useState(false);
+  const [isDownloading, setIsDownloading] = useState(false);
   const [code, setCode] = useState("");
   const [content, setContent] = useState(null);
   const [selectedFiles, setSelectedFiles] = useState([]);
@@ -22,6 +24,9 @@ export default function Retrieve() {
 
   const fetchContent = async () => {
     if (!code.trim()) return toast.error("Enter a valid code");
+    if (isFetching) return; // Prevent multiple clicks
+
+    setIsFetching(true);
 
     try {
       toast.loading("Fetching content...");
@@ -76,6 +81,8 @@ export default function Retrieve() {
       toast.error("Invalid Code or Nothing Found");
       setContent(null);
       setSelectedFiles([]);
+    } finally {
+      setIsFetching(false);
     }
   };
 
@@ -138,7 +145,9 @@ export default function Retrieve() {
 
   const downloadSelected = async () => {
     if (selectedFiles.length === 0) return toast.error("Select at least one file.");
+    if (isDownloading) return; // Prevent multiple clicks
 
+    setIsDownloading(true);
     toast.success(`Starting download of ${selectedFiles.length} file(s)...`);
 
     for (let i = 0; i < selectedFiles.length; i++) {
@@ -158,7 +167,6 @@ export default function Retrieve() {
 
         window.URL.revokeObjectURL(url);
 
-        // Wait before next download
         if (i < selectedFiles.length - 1) {
           await new Promise(resolve => setTimeout(resolve, 1000));
         }
@@ -166,12 +174,16 @@ export default function Retrieve() {
         console.error(`Failed to download ${file.name}:`, error);
       }
     }
+
+    setIsDownloading(false);
   };
 
 
   const downloadAll = async () => {
     if (!content?.files?.length) return toast.error("No files to download");
+    if (isDownloading) return; // Prevent multiple clicks
 
+    setIsDownloading(true);
     toast.success(`Starting download of ${content.files.length} file(s)...`);
 
     for (let i = 0; i < content.files.length; i++) {
@@ -198,6 +210,8 @@ export default function Retrieve() {
         console.error(`Failed to download ${file.name}:`, error);
       }
     }
+
+    setIsDownloading(false);
   };
 
   return (
@@ -224,16 +238,29 @@ export default function Retrieve() {
             type="text"
             placeholder="Enter your code"
             value={code}
-            onChange={(e) => setCode(e.target.value)}
+            onChange={(e) => setCode(e.target.value.toLowerCase())}
             onKeyPress={(e) => e.key === 'Enter' && fetchContent()}
             className="flex-1 p-3 sm:p-4 rounded-xl bg-[#38175A] text-white outline-none border-2 border-transparent focus:border-[#838CE5] transition-all duration-300 text-base sm:text-lg"
           />
           <button
-            className="bg-[#838CE5] px-6 sm:px-8 py-3 sm:py-4 rounded-xl font-bold hover:bg-[#6e76dc] transition-all duration-300 hover:scale-105 hover:shadow-lg text-sm sm:text-base"
+            className="bg-[#838CE5] px-6 sm:px-8 py-3 sm:py-4 rounded-xl font-bold hover:bg-[#6e76dc] transition-all duration-300 hover:scale-105 hover:shadow-lg text-sm sm:text-base disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             onClick={fetchContent}
+            disabled={isFetching}
           >
-            <i className="fa-solid fa-search mr-2"></i>
-            Retrieve
+            {isFetching ? (
+              <>
+                <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Fetching...
+              </>
+            ) : (
+              <>
+                <i className="fa-solid fa-search mr-2"></i>
+                Retrieve
+              </>
+            )}
           </button>
         </div>
       </div>
@@ -361,22 +388,50 @@ export default function Retrieve() {
               <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 pt-4 border-t border-gray-700">
                 <button
                   onClick={downloadSelected}
-                  disabled={selectedFiles.length === 0}
-                  className={`bg-[#D6B9FC] text-black px-6 sm:px-8 py-3 sm:py-4 rounded-xl font-bold transition-all duration-300 flex items-center justify-center gap-2 text-sm sm:text-base ${selectedFiles.length === 0
-                    ? "opacity-50 cursor-not-allowed"
-                    : "hover:bg-[#bda1f5] hover:scale-105 hover:shadow-lg"
-                    }`}
+                  disabled={selectedFiles.length === 0 || isDownloading}
+                  className={`bg-[#D6B9FC] text-black px-6 sm:px-8 py-3 sm:py-4 rounded-xl font-bold transition-all duration-300 flex items-center justify-center gap-2 text-sm sm:text-base ${
+                    selectedFiles.length === 0 || isDownloading
+                      ? "opacity-50 cursor-not-allowed"
+                      : "hover:bg-[#bda1f5] hover:scale-105 hover:shadow-lg"
+                  }`}
                 >
-                  <i className="fa-solid fa-check-double"></i>
-                  <span>Download Selected {selectedFiles.length > 0 && `(${selectedFiles.length})`}</span>
+                  {isDownloading ? (
+                    <>
+                      <svg className="animate-spin h-5 w-5 text-black" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      Downloading...
+                    </>
+                  ) : (
+                    <>
+                      <i className="fa-solid fa-check-double"></i>
+                      <span>Download Selected {selectedFiles.length > 0 && `(${selectedFiles.length})`}</span>
+                    </>
+                  )}
                 </button>
 
                 <button
                   onClick={downloadAll}
-                  className="bg-green-500 text-white px-6 sm:px-8 py-3 sm:py-4 rounded-xl font-bold hover:bg-green-600 transition-all duration-300 hover:scale-105 hover:shadow-lg flex items-center justify-center gap-2 text-sm sm:text-base"
+                  disabled={isDownloading}
+                  className={`bg-green-500 text-white px-6 sm:px-8 py-3 sm:py-4 rounded-xl font-bold transition-all duration-300 hover:scale-105 hover:shadow-lg flex items-center justify-center gap-2 text-sm sm:text-base ${
+                    isDownloading ? "opacity-50 cursor-not-allowed" : "hover:bg-green-600"
+                  }`}
                 >
-                  <i className="fa-solid fa-download"></i>
-                  Download All
+                  {isDownloading ? (
+                    <>
+                      <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      Downloading...
+                    </>
+                  ) : (
+                    <>
+                      <i className="fa-solid fa-download"></i>
+                      Download All
+                    </>
+                  )}
                 </button>
               </div>
             </div>

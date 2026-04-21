@@ -1,9 +1,64 @@
+import { useEffect, useState } from "react";
+import axios from "axios";
+
 export default function Home() {
+  const [apiVersion, setApiVersion] = useState("");
+  const [isVersionLoading, setIsVersionLoading] = useState(true);
+  const baseUrl = import.meta.env.VITE_BASEURL;
+
+  useEffect(() => {
+    let isMounted = true;
+    let retryTimer;
+
+    const fetchVersion = async () => {
+      try {
+        const response = await axios.get(`${baseUrl}/version`, { timeout: 5000 });
+        if (isMounted && response?.data?.success && response?.data?.version) {
+          setApiVersion(response.data.version);
+          setIsVersionLoading(false);
+          return true;
+        }
+      } catch (error) {
+      }
+
+      return false;
+    };
+
+    const fetchWithRetry = async () => {
+      const fetched = await fetchVersion();
+      if (!fetched && isMounted) {
+        retryTimer = setTimeout(fetchWithRetry, 2000);
+      }
+    };
+
+    fetchWithRetry();
+
+    return () => {
+      isMounted = false;
+      if (retryTimer) {
+        clearTimeout(retryTimer);
+      }
+    };
+  }, [baseUrl]);
+
   return (
-    <div className="flex flex-col items-center justify-center text-center min-h-[calc(100vh-95px)] px-6 home-container" style={{ fontFamily: "'Inter', 'Segoe UI', system-ui, sans-serif" }}>
+    <div className="relative flex flex-col items-center justify-center text-center min-h-[calc(100vh-95px)] px-6 home-container" style={{ fontFamily: "'Inter', 'Segoe UI', system-ui, sans-serif" }}>
       <div className="relative z-10 flex flex-col items-center">
         <h1 className="home-title font-extrabold mb-6 animate-[fadeInUp_0.8s_ease-out] tracking-tight" style={{ fontFamily: "'Space Grotesk', 'Inter', sans-serif" }}>
-          Welcome to GetIt
+          <span>Welcome to GetIt</span>
+          <span className="home-version-inline" aria-live="polite">
+            {isVersionLoading ? (
+              <span className="inline-flex items-center gap-1">
+                <svg className="h-3 w-3 animate-spin text-[#838CE5]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" aria-hidden="true">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                </svg>
+                <span className="font-mono">v</span>
+              </span>
+            ) : (
+              <span className="font-mono">v{apiVersion || "..."}</span>
+            )}
+          </span>
         </h1>
         
         <p className="home-subtitle max-w-xl text-gray-200 mb-10 animate-[fadeInUp_0.8s_ease-out_0.2s_both] leading-relaxed font-light">
@@ -48,6 +103,11 @@ export default function Home() {
 
         .home-title {
           font-size: 3.75rem; /* 60px */
+          display: inline-flex;
+          align-items: baseline;
+          gap: 0.85rem;
+          flex-wrap: wrap;
+          justify-content: center;
         }
 
         .home-subtitle {
@@ -56,6 +116,15 @@ export default function Home() {
 
         .home-button {
           min-width: 140px;
+        }
+
+        .home-version-inline {
+          font-size: 0.32em;
+          letter-spacing: 0.02em;
+          color: rgba(214, 185, 252, 0.72);
+          user-select: none;
+          transform: translateY(-0.2rem);
+          margin-left: 0.3rem;
         }
 
         /* Tablet (768px and below) */
@@ -84,6 +153,7 @@ export default function Home() {
             padding: 0.75rem 2rem;
             font-size: 0.95rem;
           }
+
         }
 
         /* Mobile (480px and below) */
@@ -120,6 +190,7 @@ export default function Home() {
             font-size: 0.95rem;
             text-align: center;
           }
+
         }
 
         /* Extra small phones (360px and below) */

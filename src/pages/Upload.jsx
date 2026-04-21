@@ -314,7 +314,7 @@ export default function Upload() {
             </label>
             <input
               type="text"
-              placeholder="Enter a name for your text..."
+              placeholder="Enter a name for your text content"
               value={textName}
               onChange={(e) => setTextName(e.target.value)}
               className="w-full p-4 rounded-xl bg-[#38175A] text-white outline-none border-2 border-transparent focus:border-[#838CE5] transition-all duration-300"
@@ -323,7 +323,7 @@ export default function Upload() {
 
           <div className="relative">
             <textarea
-              placeholder="Type or paste your text here..."
+              placeholder="Type or paste your text content here"
               value={text}
               onChange={(e) => setText(e.target.value)}
               className="w-full h-64 rounded-xl p-5 bg-[#38175A] outline-none text-white border-2 border-gray-700 focus:border-[#838CE5] transition-all duration-300 resize-none"

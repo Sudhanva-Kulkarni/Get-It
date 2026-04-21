@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://getitfast.vercel.app/sitemap.xml

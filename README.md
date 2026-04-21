@@ -84,7 +84,7 @@
 1. Fork the repository
 2. Create a feature branch
 3. Commit changes
-4. Push and open a Pull Request
+4. Push and open Pull Requests
 
 ---
 

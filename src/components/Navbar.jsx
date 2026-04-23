@@ -48,6 +48,27 @@ export default function Navbar() {
           >
             Retrieve
           </a>
+          <a
+            href="/lobbies"
+            className={`font-medium px-3 lg:px-4 py-2 rounded-lg transition-colors duration-200 text-sm lg:text-base ${
+              currentPath === '/lobbies'
+                ? 'bg-[#D6B9FC] text-black font-semibold'
+                : 'text-gray-300 hover:text-white hover:bg-[#4a1f6e]'
+            }`}
+          >
+            Lobbies
+          </a>
+
+          <a
+            href="/lobbies/create"
+            className={`font-medium px-3 lg:px-4 py-2 rounded-lg transition-colors duration-200 text-sm lg:text-base ${
+              currentPath === '/lobbies/create'
+                ? 'bg-[#D6B9FC] text-black font-semibold'
+                : 'text-gray-300 hover:text-white hover:bg-[#4a1f6e]'
+            }`}
+          >
+            Create Lobby
+          </a>
         </div>
 
         <button

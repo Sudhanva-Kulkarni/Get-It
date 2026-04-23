@@ -4,7 +4,7 @@ let lobbySocket = null;
 
 export function getLobbySocket() {
   if (!lobbySocket) {
-    lobbySocket = io("http://localhost:3000", {
+    lobbySocket = io(import.meta.env.VITE_SOCKET_URL, {
       transports: ["websocket", "polling"],
     });
   }
